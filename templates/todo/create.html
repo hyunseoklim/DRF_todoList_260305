@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<div class="container">
+    <h2>Create a New Todo</h2>
+    <div>
+        <label for="name">Name:</label>
+        <input type="text" name="name" id="name">
+    </div>
+
+    <div>
+        <label for="description">Description:</label>
+        <textarea name="description" id="description">
+      </textarea>
+    </div>
+
+    <div>
+        <label for="complete">Complete:</label>
+        <input type="checkbox" name="complete" id="complete">
+    </div>
+
+    <div>
+        <label for="exp">Experience Points:</label>
+        <input type="number" name="exp" id="exp" min="0">
+    </div>
+
+    <button type="submit" id="todoCreate">Create</button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<!-- axios 라이브러리 CDN 로드 (HTTP 요청을 쉽게 보내기 위한 라이브러리) -->
+
+<script>
+    const api = axios.create({
+        baseURL: "/",
+        // 모든 API 요청의 기본 URL
+
+        headers: {
+            "Content-Type": "application/json",
+            // 서버로 보낼 데이터 형식 지정 (JSON)
+        }
+    });
+
+    // CSRF 자동 주입 (Django 필수)
+    api.interceptors.request.use(config => {
+
+        const csrfToken = document.cookie
+            .split("; ")
+            .find(row => row.startsWith("csrftoken"))
+            ?.split("=")[1];
+        // 브라우저 쿠키에서 csrftoken 값을 찾기
+
+        if (csrfToken) {
+            config.headers["X-CSRFToken"] = csrfToken;
+            // Django가 요구하는 CSRF 토큰을 요청 헤더에 자동 추가
+        }
+
+        return config;
+        // 수정된 요청 설정 반환
+    });
+
+
+    document.getElementById("todoCreate").addEventListener("click", async () => {
+        // todoCreate 버튼 클릭 시 실행
+
+        try { // 에러가 발생할 수 있는 코드를 실행하는 영역
+
+            const res = await api.post("todo/viewsets/view/", {
+                // Todo 생성 API로 POST 요청 전송
+                // 비동기 작업이 끝날 때까지 기다림, 서버 응답이 올 때까지 기다린 후 다음 코드 실행
+
+                name: document.getElementById("name").value,
+                // 입력한 Todo 이름
+
+                description: document.getElementById("description").value,
+                // 입력한 설명
+
+                complete: document.getElementById("complete").checked,
+                // 체크박스 상태 (true / false)
+
+                exp: Number(document.getElementById("exp").value || 0)
+                // 경험치 입력값 (숫자로 변환, 없으면 0)
+            });
+
+            console.log(res.data);
+            // 서버에서 받은 응답 데이터 출력
+
+            // 글 저장 후 메인페이지 이동
+            window.location.href = "/todo/list/";
+
+        } catch (err) { // 에러가 발생했을 때 처리하는 영역
+            console.error(err.response?.data || err.message);
+            // 에러 발생 시 콘솔에 에러 출력
+        }
+    });
+</script>
+
+{% endblock %}

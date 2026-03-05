@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+
+<div class="todocontainer">
+    {% for todo in todos %}
+    <div class="todo-item" data-id="{{ todo.pk }}">
+        <p><strong>이름:</strong> {{ todo.name }}</p>
+        <p><strong>설명:</strong> {{ todo.description }}</p>
+        <p><strong>완료 여부:</strong> {{ todo.complete }}</p>
+        <p><strong>작성일:</strong>
+            {{ todo.created_at|date:"Y-m-d H:i" }}</p>
+
+        <hr>
+    </div>
+    {% empty %}
+    <p>등록된 할 일이 없습니다.</p>
+    {% endfor %}
+</div>
+<button class="todoCreate" id="createBtn">Todo 등록하기</button>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // HTML 문서가 모두 로드된 후 실행되는 코드
+
+        console.log("create loading");
+        // 페이지가 정상적으로 로드되었는지 확인하는 콘솔 출력
+
+        // class가 "todo-item"인 모든 요소들을 선택
+        const items = document.querySelectorAll(".todo-item");
+
+        // 선택된 요소들을 하나씩 반복 처리
+        items.forEach(item => {
+
+            // 각 todo-item에 클릭 이벤트 추가
+            item.addEventListener("click", () => {
+
+                const todoId = item.dataset.id;
+                // HTML의 data-id 속성 값을 가져옴 (todo의 pk 값)
+
+                window.location.href = `/todo/detail/${todoId}/`;
+                // 해당 pk를 사용하여 상세 페이지로 이동
+            });
+        });
+
+        document.getElementById("createBtn").addEventListener("click", () => {
+            // id가 createBtn인 버튼 클릭 이벤트
+
+            window.location.href = "/todo/create/";
+            // Todo 생성 페이지로 이동
+
+            console.log("createBtn click");
+            // 버튼 클릭 확인용 콘솔 출력
+        });
+
+    });
+</script>
+{% endblock %}

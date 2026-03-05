@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+
+<div class="container">
+    <h2>Todo 수정</h2>
+
+    <div>
+        <label for="name">Name:</label>
+        <input type="text" name="name" id="name" value="{{ todo.name }}">
+    </div>
+
+    <div>
+        <label for="description">Description:</label>
+        <textarea name="description" id="description">{{ todo.description }}</textarea>
+    </div>
+
+    <div>
+        <label for="complete">Complete:</label>
+        <input type="checkbox" name="complete" id="complete" {% if todo.complete %}checked{% endif %}>
+    </div>
+
+    <div>
+        <label for="exp">Experience Points:</label>
+        <input type="number" name="exp" id="exp" min="0" value="{{ todo.exp }}">
+    </div>
+
+    <button type="button" id="todoUpdate">저장</button>
+    <button type="button" onclick="history.back()">취소</button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script>
+    const api = axios.create({
+        baseURL: "/",
+        // axios 인스턴스 생성 (모든 API 요청의 기본 URL 설정)
+        // Content-Type을 따로 지정하지 않음 → FormData 사용 시 axios가 자동으로 multipart/form-data 설정
+    });
+
+    // CSRF 토큰 자동 추가 (Django 보안 필수)
+    api.interceptors.request.use(config => {
+
+        const csrfToken = document.cookie
+            .split("; ")
+            .find(row => row.startsWith("csrftoken"))
+            ?.split("=")[1];
+        // 브라우저 쿠키에서 csrftoken 값을 찾아서 추출
+
+        if (csrfToken) {
+            config.headers["X-CSRFToken"] = csrfToken;
+            // Django에서 요구하는 CSRF 토큰을 요청 헤더에 추가
+        }
+
+        return config;
+        // 수정된 요청 설정 반환
+    });
+
+
+    const todoId = "{{ todo.id }}";
+    // Django 템플릿에서 전달된 todo의 id(pk)를 JavaScript 변수로 저장
+
+
+    document.getElementById("todoUpdate").addEventListener("click", async () => {
+        // id가 todoUpdate인 버튼을 클릭하면 실행
+
+        try {
+
+            const formData = new FormData();
+            // FormData 객체 생성 (폼 데이터를 서버로 전송하기 위한 객체)
+
+            formData.append("name", document.getElementById("name").value);
+            // name 입력값을 FormData에 추가
+
+            formData.append("description", document.getElementById("description").value);
+            // description 입력값을 FormData에 추가
+
+            formData.append("complete", document.getElementById("complete").checked);
+            // 체크박스 상태(true / false)를 complete 값으로 추가
+
+            formData.append("exp", document.getElementById("exp").value || 0);
+            // exp 입력값 추가 (값이 없으면 0으로 설정)
+
+            const res = await api.patch(`/todo/api/update/${todoId}/`, formData);
+            // PATCH 요청으로 Todo 데이터 수정 API 호출
+            // formData를 서버로 전송하여 일부 필드만 수정
+
+            console.log(res.data);
+            // 서버에서 반환된 수정된 데이터 콘솔 출력
+
+            window.location.href = `/todo/detail/${todoId}/`;
+            // 수정이 완료되면 해당 Todo의 상세 페이지로 이동
+
+        } catch (err) {
+            console.error(err.response?.data || err.message);
+            // 오류 발생 시 에러 메시지를 콘솔에 출력
+
+            alert("수정 실패");
+            // 사용자에게 수정 실패 알림 표시
+        }
+    });
+</script>
+
+{% endblock %}
