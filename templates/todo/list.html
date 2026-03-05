@@ -2,57 +2,135 @@
 {% load static %}
 {% block content %}
 
-<div class="todocontainer">
-    {% for todo in todos %}
-    <div class="todo-item" data-id="{{ todo.pk }}">
-        <p><strong>이름:</strong> {{ todo.name }}</p>
-        <p><strong>설명:</strong> {{ todo.description }}</p>
-        <p><strong>완료 여부:</strong> {{ todo.complete }}</p>
-        <p><strong>작성일:</strong>
-            {{ todo.created_at|date:"Y-m-d H:i" }}</p>
+<!-- Todo 목록이 출력될 영역 -->
+<div class="todocontainer"></div>
 
-        <hr>
-    </div>
-    {% empty %}
-    <p>등록된 할 일이 없습니다.</p>
-    {% endfor %}
+<!-- 페이지네이션 영역 -->
+<div class="pagination">
+    <button id="prevBtn">이전</button>
+    <span id="pageInfo"></span>
+    <button id="nextBtn">다음</button>
 </div>
-<button class="todoCreate" id="createBtn">Todo 등록하기</button>
+
+<!-- Todo 생성 페이지 이동 버튼 -->
+<button id="createBtn">Todo 등록하기</button>
+
+<!-- Axios 라이브러리 CDN 로드 (HTTP 요청을 쉽게 보내기 위한 라이브러리) -->
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        // HTML 문서가 모두 로드된 후 실행되는 코드
 
-        console.log("create loading");
-        // 페이지가 정상적으로 로드되었는지 확인하는 콘솔 출력
+    /* HTML이 모두 로드된 후 JavaScript 실행 */
+    document.addEventListener("DOMContentLoaded", () => {
 
-        // class가 "todo-item"인 모든 요소들을 선택
-        const items = document.querySelectorAll(".todo-item");
+        /* Axios 인스턴스 생성
+           baseURL을 "/"로 설정하면 같은 Django 서버로 요청을 보냄 */
+        const api = axios.create({
+            baseURL: "/",
+        });
 
-        // 선택된 요소들을 하나씩 반복 처리
-        items.forEach(item => {
+        /* 현재 페이지 번호 저장 */
+        let currentPage = 1;
 
-            // 각 todo-item에 클릭 이벤트 추가
-            item.addEventListener("click", () => {
 
-                const todoId = item.dataset.id;
-                // HTML의 data-id 속성 값을 가져옴 (todo의 pk 값)
+        /* 특정 페이지의 Todo 목록을 서버에서 가져오는 함수 */
+        function loadPage(page) {
 
-                window.location.href = `/todo/detail/${todoId}/`;
-                // 해당 pk를 사용하여 상세 페이지로 이동
+            /* axios GET 요청 → Django ViewSet API 호출 */
+            api.get(`/todo/viewsets/view/?page=${page}`)
+                .then(res => {
+
+                    /* axios는 응답 데이터가 res.data 안에 들어있음 */
+                    const data = res.data;
+
+                    /* Todo 목록 화면에 출력 */
+                    renderTodos(data.data);
+
+                    /* 페이지네이션 UI 업데이트 */
+                    updatePaginationUI(data);
+
+                    /* 현재 페이지 상태 업데이트 */
+                    currentPage = data.current_page;
+                })
+                .catch(err => console.error("페이지 로드 실패", err));
+        }
+
+
+        /* Todo 목록을 HTML에 렌더링하는 함수 */
+        function renderTodos(todos) {
+
+            /* Todo 출력 영역 선택 */
+            const container = document.querySelector(".todocontainer");
+
+            /* 기존 내용 초기화 */
+            container.innerHTML = "";
+
+            /* Todo 데이터를 반복하면서 화면에 출력 */
+            todos.forEach(todo => {
+
+                const div = document.createElement("div");
+                div.className = "todo-item";
+
+                /* dataset → HTML 요소에 데이터를 저장하는 속성 */
+                div.dataset.id = todo.id;
+
+                /* Todo 정보 표시 */
+                div.innerHTML = `
+                <p><strong>이름:</strong> ${todo.name}</p>
+                <p><strong>설명:</strong> ${todo.description}</p>
+                <p><strong>완료 여부:</strong> ${todo.complete}</p>
+                <p><strong>exp:</strong> ${todo.exp}</p>
+                <hr>
+            `;
+
+                /* Todo 클릭 시 상세 페이지 이동 */
+                div.addEventListener("click", () => {
+                    window.location.href = `/todo/detail/${todo.id}/`;
+                });
+
+                /* 화면에 Todo 추가 */
+                container.appendChild(div);
             });
+        }
+
+
+        /* 페이지네이션 UI 업데이트 */
+        function updatePaginationUI(data) {
+
+            /* 현재 페이지 / 전체 페이지 표시 */
+            document.getElementById("pageInfo").innerText =
+                `${data.current_page} / ${data.page_count}`;
+
+            /* 이전 버튼 활성화 여부 */
+            document.getElementById("prevBtn").disabled = !data.previous;
+
+            /* 다음 버튼 활성화 여부 */
+            document.getElementById("nextBtn").disabled = !data.next;
+        }
+
+
+        /* 이전 페이지 버튼 클릭 이벤트 */
+        document.getElementById("prevBtn").addEventListener("click", () => {
+            if (currentPage > 1) loadPage(currentPage - 1);
         });
 
+
+        /* 다음 페이지 버튼 클릭 이벤트 */
+        document.getElementById("nextBtn").addEventListener("click", () => {
+            loadPage(currentPage + 1);
+        });
+
+
+        /* Todo 생성 페이지 이동 */
         document.getElementById("createBtn").addEventListener("click", () => {
-            // id가 createBtn인 버튼 클릭 이벤트
-
             window.location.href = "/todo/create/";
-            // Todo 생성 페이지로 이동
-
-            console.log("createBtn click");
-            // 버튼 클릭 확인용 콘솔 출력
         });
+
+
+        /* 페이지 최초 로딩 시 1페이지 데이터 요청 */
+        loadPage(1);
 
     });
+
 </script>
 {% endblock %}
