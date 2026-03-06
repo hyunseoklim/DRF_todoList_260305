@@ -15,25 +15,29 @@
 <!-- Todo 생성 페이지 이동 버튼 -->
 <button id="createBtn">Todo 등록하기</button>
 
+<!-- Axios 라이브러리 CDN 로드 (HTTP 요청을 쉽게 보내기 위한 라이브러리) -->
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
 <script>
 
     /* HTML이 모두 로드된 후 JavaScript 실행 */
     document.addEventListener("DOMContentLoaded", () => {
 
-        /* Axios 인스턴스 생성
-           baseURL을 "/"로 설정하면 같은 Django 서버로 요청을 보냄 */
-        const api = axios.create({
-            baseURL: "/",
-        });
 
-        /* 현재 페이지 번호 저장 */
+        const LOGIN_PAGE_URL = "/login/";
         let currentPage = 1;
-
+        /*
+                // Axios 인스턴스 생성
+                // baseURL을 "/"로 설정하면 같은 Django 서버로 요청을 보냄
+                const api = axios.create({
+                    baseURL: "/",
+                });
+        */
 
         /* 특정 페이지의 Todo 목록을 서버에서 가져오는 함수 */
         function loadPage(page) {
-            api.get(`/todo/viewsets/view/?page=${page}`)
+            // api.get(`/todo/viewsets/view/?page=${page}`)
+            window.api.get(`/todo/viewsets/view/?page=${page}`)
                 .then(res => {
                     const data = res.data;
                     // 표준 구조(data.results)로 단순화, 없으면 빈 배열
@@ -42,8 +46,8 @@
                     currentPage = data.current_page || page;
                 })
                 .catch(err => {
-                    alert("페이지 로드 실패: " + (err.response?.data?.detail || err.message));
-                    console.error("페이지 로드 실패", err);
+                    handleAuthError(err).catch(() => { });
+                    console.error("페이지 로드 실패", err.response?.data || err.message);
                 });
         }
 
@@ -61,18 +65,23 @@
                 div.className = "todo-item";
                 div.dataset.id = todo.id;
                 // 이미지 경로: 백엔드가 절대경로 반환한다고 가정
-                const imageSrc = todo.image || "";
+                const imageSrc = todo.image
+                    ? (todo.image.startsWith("http") ? todo.image : `${location.origin}${todo.image}`)
+                    : "";
+
                 div.innerHTML = `
-                    <p><strong>제목:</strong> ${todo.name || ""}</p>
-                    <p><strong>설명:</strong> ${todo.description || ""}</p>
-                    <p><strong>완료 여부:</strong> ${(todo.complete ? "완료" : "미완료")}</p>
-                    <p><strong>exp:</strong> ${todo.exp || 0}</p>
-                    ${imageSrc ? `<img src="${imageSrc}" style="max-width:200px;">` : ""}
-                    <hr>
-                `;
+                <p><strong>제목:</strong> ${todo.name ?? ""}</p>
+                <p><strong>설명:</strong> ${todo.description ?? ""}</p>
+                <p><strong>완료 여부:</strong> ${(todo.complete ? "완료" : "미완료")}</p>
+                <p><strong>exp:</strong> ${todo.exp ?? 0}</p>
+                ${imageSrc ? `<img src="${imageSrc}" style="max-width:200px;">` : ""}
+                <hr>
+            `;
+
                 div.addEventListener("click", () => {
                     window.location.href = `/todo/detail/${todo.id}/`;
                 });
+
                 container.appendChild(div);
             });
         }
