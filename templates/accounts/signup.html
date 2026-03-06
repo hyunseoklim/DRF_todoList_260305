@@ -1,0 +1,70 @@
+<h2>회원가입</h2>
+
+<input id="username" placeholder="username">
+<input id="password" placeholder="password" type="password">
+<input id="password2" placeholder="password 확인" type="password">
+
+<button id="signupBtn">가입</button>
+
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+
+        // Axios 인스턴스 생성
+        // baseURL을 "/"로 설정하여 같은 Django 서버로 API 요청을 보냄
+        const api = axios.create({ baseURL: "/" });
+
+
+        // 요청 인터셉터 설정
+        // 서버로 요청을 보내기 전에 자동으로 실행되는 코드
+        api.interceptors.request.use(config => {
+
+            // 브라우저 쿠키에서 csrftoken 값 찾기
+            const csrfToken = document.cookie
+                .split("; ")
+                .find(row => row.startsWith("csrftoken="))
+                ?.split("=")[1];
+
+            // headers 객체가 없으면 생성
+            config.headers = config.headers || {};
+
+            // csrftoken이 있으면 요청 헤더에 추가
+            // Django의 CSRF 보호를 통과하기 위해 필요
+            if (csrfToken) config.headers["X-CSRFToken"] = csrfToken;
+
+            return config;
+        });
+
+
+        // 회원가입 버튼 클릭 이벤트
+        document.getElementById("signupBtn").addEventListener("click", async () => {
+            try {
+
+                // 입력창에서 사용자 입력값 가져오기
+                const username = document.getElementById("username").value;
+                const password = document.getElementById("password").value;
+                const password2 = document.getElementById("password2").value;
+
+                // 회원가입 API 요청
+                // 입력한 데이터를 JSON 형태로 서버에 전달
+                await api.post("/api/signup/", { username, password, password2 });
+
+                // 회원가입 성공 시 알림 표시
+                alert("회원가입 완료 → 로그인으로 이동");
+
+                // 로그인 페이지로 이동
+                window.location.href = "/login/";
+
+            } catch (err) {
+
+                // 오류 발생 시 콘솔에 출력
+                console.log(err.response?.data || err.message);
+
+                // 사용자에게 실패 메시지 표시
+                alert("회원가입 실패");
+            }
+        });
+
+    });
+</script>

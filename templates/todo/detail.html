@@ -1,64 +1,144 @@
 {% extends "base.html" %}
+{% load static %}
 {% block content %}
 
+
+<!-- Todo 상세 정보를 보여주는 영역 -->
 <div class="todoDetail">
     <p><strong>이름:</strong> {{ todo.name }}</p>
     <p><strong>설명:</strong> {{ todo.description }}</p>
     <p><strong>완료 여부:</strong> {{ todo.complete }}</p>
     <p><strong>작성일:</strong> {{ todo.created_at }}</p>
+
+    <!-- 이미지가 있을 때만 표시 -->
+    {% if todo.image %}
+    <p><strong>이미지:</strong></p>
+    <img src="{{ todo.image.url }}" alt="todo image" style="max-width:300px; height:auto;">
+    {% else %}
+    <p><strong>이미지:</strong> -</p>
+    {% endif %}
 </div>
 
+<!-- 버튼 영역 -->
 <div class="btnList">
     <button class="todoUpdate">수정</button>
     <button class="todoDelete">삭제</button>
     <button class="todoHome">홈으로</button>
 </div>
 
+<!-- Axios CDN -->
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
 <script>
     document.addEventListener("DOMContentLoaded", () => {
 
+        // Django 템플릿에서 Todo id를 가져옴
         const todoId = "{{ todo.id }}";
 
+        // 로그인 페이지 URL
+        const LOGIN_PAGE_URL = "/login/";
+
+        // Todo 목록 페이지 URL
+        const LIST_PAGE_URL = "/todo/list/";
+
+
+        // -----------------------------
+        // CSRF Token 가져오는 함수
+        // Django의 POST/PUT/PATCH/DELETE 요청 시 필요
+        // -----------------------------
+        function getCookie(name) {
+            // 브라우저 쿠키 문자열 가져오기
+            const value = `; ${document.cookie}`;
+
+            // 원하는 쿠키 이름을 기준으로 분리
+            const parts = value.split(`; ${name}=`);
+
+            // 쿠키가 존재하면 값 반환
+            if (parts.length === 2) return parts.pop().split(";").shift();
+
+            return null;
+        }
+
+
+        // -----------------------------
+        // Axios 인스턴스 생성
+        // - baseURL: 같은 Django 서버로 요청
+        // -----------------------------
         const api = axios.create({
             baseURL: "/",
-            headers: {
-                "Content-Type": "application/json",
-                "X-CSRFToken": document.cookie
-                    .split("; ")
-                    .find(row => row.startsWith("csrftoken"))
-                    ?.split("=")[1],
-            }
+            withCredentials: true,
         });
 
-        // 수정 버튼
-        const updateBtn = document.querySelector(".todoUpdate");
-        updateBtn.addEventListener("click", () => {
+        // -----------------------------
+        // Axios 요청 인터셉터: CSRF 헤더 자동 주입
+        // (fetch에서 headers로 X-CSRFToken 넣던 것과 동일 목적)
+        // -----------------------------
+        api.interceptors.request.use((config) => {
+            const csrf = getCookie("csrftoken");
+
+            config.headers = config.headers || {};
+            if (csrf) {
+                config.headers["X-CSRFToken"] = csrf;
+            }
+            return config;
+        });
+
+
+        // -----------------------------
+        // 수정 버튼 클릭 이벤트
+        // -----------------------------
+        document.querySelector(".todoUpdate").addEventListener("click", () => {
+            // 수정 페이지로 이동
             window.location.href = `/todo/update/${todoId}/`;
         });
 
-        // 삭제 버튼
-        const deleteBtn = document.querySelector(".todoDelete");
-        deleteBtn.addEventListener("click", async () => {
 
+        // -----------------------------
+        // 삭제 버튼 클릭 이벤트 (fetch → axios로만 변경)
+        // - 동작은 동일: confirm → DELETE 요청 → 401/403 로그인 이동 → 성공 시 리스트 이동
+        // -----------------------------
+        document.querySelector(".todoDelete").addEventListener("click", async () => {
+
+            // 삭제 확인 메시지
             const ok = confirm("정말 삭제하시겠습니까?");
             if (!ok) return;
 
             try {
-                await api.delete(`/todo/api/delete/${todoId}/`);
-                // ✅ 올바른 URL 사용
-                window.location.href = "/todo/list/";
+                // axios DELETE 요청
+                // axios: api.delete(`/todo/viewsets/view/${todoId}/`)
+                const res = await api.delete(`/todo/viewsets/view/${todoId}/`);
+
+                // axios는 2xx일 때만 여기로 들어오며, 응답 데이터는 res.data
+                // (삭제 응답이 body 없이 와도 문제 없음)
+
+                // 삭제 성공 → Todo 목록 페이지로 이동
+                window.location.href = LIST_PAGE_URL;
 
             } catch (err) {
-                console.error(err.response?.data || err.message);
-                alert("삭제 실패");
+
+                // axios는 4xx/5xx면 catch로 들어옴
+                const status = err.response?.status;
+
+                // 로그인 세션이 없거나 권한이 없는 경우 (fetch의 res.status 체크와 동일)
+                if (status === 401 || status === 403) {
+                    alert("로그인이 필요합니다.");
+                    window.location.href = LOGIN_PAGE_URL;
+                    return;
+                }
+
+                // 그 외 오류 처리
+                console.error(err);
+                alert("삭제 중 오류가 발생했습니다.");
             }
         });
 
-        // 홈으로 버튼
-        const homeBtn = document.querySelector(".todoHome");
-        homeBtn.addEventListener("click", () => {
-            window.location.href = "/todo/list/";
+
+        // -----------------------------
+        // 홈으로 버튼 클릭 이벤트
+        // -----------------------------
+        document.querySelector(".todoHome").addEventListener("click", () => {
+            // Todo 목록 페이지로 이동
+            window.location.href = LIST_PAGE_URL;
         });
 
     });

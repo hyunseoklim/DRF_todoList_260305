@@ -35,60 +35,46 @@
 
         /* 특정 페이지의 Todo 목록을 서버에서 가져오는 함수 */
         function loadPage(page) {
-
-            /* axios GET 요청 → Django ViewSet API 호출 */
             api.get(`/todo/viewsets/view/?page=${page}`)
                 .then(res => {
-
-                    /* axios는 응답 데이터가 res.data 안에 들어있음 */
                     const data = res.data;
-
-                    /* Todo 목록 화면에 출력 */
-                    renderTodos(data.data);
-
-                    /* 페이지네이션 UI 업데이트 */
+                    // 표준 구조(data.results)로 단순화, 없으면 빈 배열
+                    renderTodos(data.results || []);
                     updatePaginationUI(data);
-
-                    /* 현재 페이지 상태 업데이트 */
-                    currentPage = data.current_page;
+                    currentPage = data.current_page || page;
                 })
-                .catch(err => console.error("페이지 로드 실패", err));
+                .catch(err => {
+                    alert("페이지 로드 실패: " + (err.response?.data?.detail || err.message));
+                    console.error("페이지 로드 실패", err);
+                });
         }
 
 
         /* Todo 목록을 HTML에 렌더링하는 함수 */
         function renderTodos(todos) {
-
-            /* Todo 출력 영역 선택 */
             const container = document.querySelector(".todocontainer");
-
-            /* 기존 내용 초기화 */
             container.innerHTML = "";
-
-            /* Todo 데이터를 반복하면서 화면에 출력 */
+            if (!todos || todos.length === 0) {
+                container.innerHTML = "<p>등록된 Todo 없음</p>";
+                return;
+            }
             todos.forEach(todo => {
-
                 const div = document.createElement("div");
                 div.className = "todo-item";
-
-                /* dataset → HTML 요소에 데이터를 저장하는 속성 */
                 div.dataset.id = todo.id;
-
-                /* Todo 정보 표시 */
+                // 이미지 경로: 백엔드가 절대경로 반환한다고 가정
+                const imageSrc = todo.image || "";
                 div.innerHTML = `
-                <p><strong>이름:</strong> ${todo.name}</p>
-                <p><strong>설명:</strong> ${todo.description}</p>
-                <p><strong>완료 여부:</strong> ${todo.complete}</p>
-                <p><strong>exp:</strong> ${todo.exp}</p>
-                <hr>
-            `;
-
-                /* Todo 클릭 시 상세 페이지 이동 */
+                    <p><strong>제목:</strong> ${todo.name || ""}</p>
+                    <p><strong>설명:</strong> ${todo.description || ""}</p>
+                    <p><strong>완료 여부:</strong> ${(todo.complete ? "완료" : "미완료")}</p>
+                    <p><strong>exp:</strong> ${todo.exp || 0}</p>
+                    ${imageSrc ? `<img src="${imageSrc}" style="max-width:200px;">` : ""}
+                    <hr>
+                `;
                 div.addEventListener("click", () => {
                     window.location.href = `/todo/detail/${todo.id}/`;
                 });
-
-                /* 화면에 Todo 추가 */
                 container.appendChild(div);
             });
         }
@@ -96,15 +82,11 @@
 
         /* 페이지네이션 UI 업데이트 */
         function updatePaginationUI(data) {
-
-            /* 현재 페이지 / 전체 페이지 표시 */
-            document.getElementById("pageInfo").innerText =
-                `${data.current_page} / ${data.page_count}`;
-
-            /* 이전 버튼 활성화 여부 */
+            // current_page, page_count가 표준이라고 가정
+            const current = data.current_page || currentPage || 1;
+            const total = data.page_count || "?";
+            document.getElementById("pageInfo").innerText = `${current} / ${total}`;
             document.getElementById("prevBtn").disabled = !data.previous;
-
-            /* 다음 버튼 활성화 여부 */
             document.getElementById("nextBtn").disabled = !data.next;
         }
 

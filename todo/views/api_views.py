@@ -7,10 +7,27 @@ from ..serializers import TodoSerializer  # 경로변경
 # ViewSets 사용을 위한 DRF 모듈 import
 from rest_framework import viewsets
 
+# 인증된 사용자만 접근 가능하도록 하는 권한 클래스
+from rest_framework.permissions import IsAuthenticated
+
 from rest_framework.pagination import PageNumberPagination
 
 # 기존 APIView 방식 대신 ViewSet을 사용하기 위해 TodoViewSet import
 # from .views.api_views import TodoViewSet
+
+
+class TodoListPagination(PageNumberPagination):
+
+    page_size = 3
+    # 한 페이지에 기본적으로 보여줄 데이터 개수
+
+    page_size_query_param = "page_size"
+    # URL 쿼리 파라미터로 페이지 크기 변경 가능
+    # 예: /todo/viewsets/view/?page_size=5
+
+    max_page_size = 50
+    # 사용자가 설정할 수 있는 최대 페이지 크기 제한
+    # 예: page_size=100 요청 시 최대 50까지만 허용
 
 
 # 전체보기
@@ -185,16 +202,21 @@ class TodoViewSet(viewsets.ModelViewSet):
     # Todo 데이터를 JSON으로 변환하거나
     # JSON 데이터를 검증/저장할 때 사용할 Serializer 지정
 
+    # 로그인한 사용자만 API 접근 가능
+    permission_classes = [IsAuthenticated]
 
-class TodoListPagination(PageNumberPagination):
+    # 페이지네이션 설정 적용
+    pagination_class = TodoListPagination
 
-    page_size = 3
-    # 한 페이지에 기본적으로 보여줄 데이터 개수
+    # 조회할 queryset 설정
+    def get_queryset(self):
 
-    page_size_query_param = "page_size"
-    # URL 쿼리 파라미터로 페이지 크기 변경 가능
-    # 예: /todo/viewsets/view/?page_size=5
+        # 현재 로그인한 사용자(request.user)의 Todo만 조회
+        # 최신 Todo가 먼저 나오도록 created_at 기준 내림차순 정렬
+        return Todo.objects.filter(user=self.request.user).order_by("-created_at")
 
-    max_page_size = 50
-    # 사용자가 설정할 수 있는 최대 페이지 크기 제한
-    # 예: page_size=100 요청 시 최대 50까지만 허용
+    # Todo 생성 시 실행되는 메서드
+    def perform_create(self, serializer):
+
+        # Todo 생성할 때 현재 로그인한 사용자를 자동으로 user 필드에 저장
+        serializer.save(user=self.request.user)

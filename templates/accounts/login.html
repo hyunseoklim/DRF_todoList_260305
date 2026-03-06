@@ -1,0 +1,67 @@
+<h2>로그인 (STEP1: 세션 로그인)</h2>
+
+<input id="username" placeholder="username">
+<input id="password" placeholder="password" type="password">
+<button id="loginBtn">로그인</button>
+
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+
+        // Axios 인스턴스 생성
+        // baseURL을 "/"로 설정하여 같은 Django 서버로 API 요청을 보냄
+        const api = axios.create({ baseURL: "/" });
+
+
+        // 요청 인터셉터 설정
+        // 모든 axios 요청이 서버로 가기 전에 실행되는 코드
+        api.interceptors.request.use(config => {
+
+            // 브라우저 쿠키에서 csrftoken 찾기
+            const csrfToken = document.cookie
+                .split("; ")
+                .find(row => row.startsWith("csrftoken="))
+                ?.split("=")[1];
+
+            // headers 객체가 없으면 생성
+            config.headers = config.headers || {};
+
+            // csrftoken이 존재하면 요청 헤더에 추가
+            // Django의 CSRF 보호를 통과하기 위해 필요
+            if (csrfToken) config.headers["X-CSRFToken"] = csrfToken;
+
+            return config;
+        });
+
+
+        // 로그인 버튼 클릭 이벤트
+        document.getElementById("loginBtn").addEventListener("click", async () => {
+            try {
+
+                // 입력창에서 username과 password 값 가져오기
+                const username = document.getElementById("username").value;
+                const password = document.getElementById("password").value;
+
+                // 로그인 API 요청
+                // 사용자 입력 데이터를 서버로 전송
+                await api.post("/api/login/", { username, password });
+
+                // 로그인 성공 시 알림 표시
+                alert("로그인 성공");
+
+                // Todo 리스트 페이지로 이동
+                window.location.href = "/todo/list/";
+
+            } catch (err) {
+
+                // 오류 발생 시 콘솔에 출력
+                console.log(err.response?.data || err.message);
+
+                // 사용자에게 실패 메시지 표시
+                alert("로그인 실패");
+            }
+        });
+
+    });
+</script>
