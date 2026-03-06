@@ -1,56 +1,92 @@
-<h2>회원가입</h2>
+{% extends "auth_base.html" %}
 
-<input id="username" placeholder="username">
-<input id="password" placeholder="password" type="password">
-<input id="password2" placeholder="password 확인" type="password">
+{% block title %}회원가입{% endblock %}
 
-<button id="signupBtn">가입</button>
+{% block content %}
+<!-- 회원가입 화면 카드 영역 -->
+<section class="auth-card">
+    <h2>회원가입</h2>
 
-<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <!-- 사용자 이름 입력 -->
+    <input id="username" placeholder="username">
 
+    <!-- 비밀번호 입력 -->
+    <input id="password" placeholder="password" type="password">
+
+    <!-- 비밀번호 확인 입력 -->
+    <input id="password2" placeholder="password 확인" type="password">
+
+    <!-- 회원가입 버튼 -->
+    <button id="signupBtn">가입</button>
+
+    <!-- 이미 계정이 있는 경우 로그인 페이지 이동 -->
+    <p style="margin-top:12px;">
+        이미 계정이 있나요? <a href="/login/">로그인</a>
+    </p>
+</section>
+{% endblock %}
+
+{% block scripts %}
 <script>
     document.addEventListener("DOMContentLoaded", () => {
 
-        // Axios 인스턴스 생성
-        // baseURL을 "/"로 설정하여 같은 Django 서버로 API 요청을 보냄
-        const api = axios.create({ baseURL: "/" });
+        // ------------------------------------
+        // axios 인스턴스 생성
+        // baseURL: 모든 API 요청의 기본 주소
+        // withCredentials: 세션 쿠키를 요청에 포함
+        // ------------------------------------
+        const api = axios.create({
+            baseURL: "/",
+            withCredentials: true
+        });
 
 
-        // 요청 인터셉터 설정
-        // 서버로 요청을 보내기 전에 자동으로 실행되는 코드
+        // ------------------------------------
+        // axios 요청 인터셉터
+        // 요청을 보내기 전에 CSRF 토큰을 자동으로 헤더에 추가
+        // Django POST 요청에서 CSRF 검증을 통과하기 위해 필요
+        // ------------------------------------
         api.interceptors.request.use(config => {
 
-            // 브라우저 쿠키에서 csrftoken 값 찾기
+            // 브라우저 쿠키에서 csrftoken 값을 찾기
             const csrfToken = document.cookie
                 .split("; ")
-                .find(row => row.startsWith("csrftoken="))
+                .find(r => r.startsWith("csrftoken="))
                 ?.split("=")[1];
 
             // headers 객체가 없으면 생성
             config.headers = config.headers || {};
 
-            // csrftoken이 있으면 요청 헤더에 추가
-            // Django의 CSRF 보호를 통과하기 위해 필요
-            if (csrfToken) config.headers["X-CSRFToken"] = csrfToken;
+            // CSRF 토큰이 있으면 헤더에 추가
+            if (csrfToken) {
+                config.headers["X-CSRFToken"] = csrfToken;
+            }
 
             return config;
         });
 
 
+        // ------------------------------------
         // 회원가입 버튼 클릭 이벤트
+        // ------------------------------------
         document.getElementById("signupBtn").addEventListener("click", async () => {
+
             try {
 
-                // 입력창에서 사용자 입력값 가져오기
+                // 입력 필드에서 값 가져오기
                 const username = document.getElementById("username").value;
                 const password = document.getElementById("password").value;
                 const password2 = document.getElementById("password2").value;
 
-                // 회원가입 API 요청
-                // 입력한 데이터를 JSON 형태로 서버에 전달
-                await api.post("/api/signup/", { username, password, password2 });
+                // 회원가입 API 호출
+                // POST /api/signup/
+                await api.post("/api/signup/", {
+                    username,
+                    password,
+                    password2
+                });
 
-                // 회원가입 성공 시 알림 표시
+                // 회원가입 성공 메시지
                 alert("회원가입 완료 → 로그인으로 이동");
 
                 // 로그인 페이지로 이동
@@ -58,13 +94,13 @@
 
             } catch (err) {
 
-                // 오류 발생 시 콘솔에 출력
+                // 오류 정보 콘솔 출력
                 console.log(err.response?.data || err.message);
 
                 // 사용자에게 실패 메시지 표시
                 alert("회원가입 실패");
             }
         });
-
     });
 </script>
+{% endblock %}

@@ -4,21 +4,18 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>{% block title %}Todo App{% endblock %}</title>
+    <title>{% block title %}Auth{% endblock %}</title>
 
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
-    <!-- axios는 전체에서 1번만 작성 -->
+    <!-- axios는 auth에서도 필요하니 여기도 1번만 -->
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 </head>
 
 <body>
-    {% include "header.html" %}
-
-    <main class="container">
+    <!-- auth 화면은 보통 중앙 정렬 + 심플 -->
+    <main class="auth-wrap">
         {% block content %}{% endblock %}
     </main>
-
-    {% include "footer.html" %}
 
     {% block scripts %}{% endblock %}
 </body>
