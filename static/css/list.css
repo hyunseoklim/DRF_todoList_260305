@@ -1,0 +1,249 @@
+/* =========================
+   Base
+========================= */
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR", Arial, sans-serif;
+    background: #f5f7fb;
+    color: #111827;
+}
+
+/* =========================
+   Header (기존: .header 유지)
+========================= */
+.header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid #e5e7eb;
+
+    /* ✅ 레이아웃 */
+    width: min(980px, 92vw);
+    margin: 0 auto;
+    padding: 14px 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+/* 제목 */
+.header h1 {
+    margin: 0;
+    font-size: 22px;
+    letter-spacing: -0.2px;
+    font-weight: 800;
+}
+
+/* 제목 링크(기존 인라인 style 제거해도 됨) */
+.header h1 a {
+    text-decoration: none;
+    color: inherit;
+}
+
+/* 오른쪽 영역(로그인/로그아웃/회원가입) */
+.header>div {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.app-header__inner {
+    width: min(980px, 92vw);
+    margin: 0 auto;
+    padding: 14px 17px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+/* "로그인됨" 같은 상태 텍스트 */
+#authWelcome {
+    font-size: 13px;
+    color: #6b7280;
+    padding: 6px 10px;
+    border: 1px solid #e5e7eb;
+    border-radius: 999px;
+    background: #fff;
+}
+
+/* 버튼/링크 공통 버튼처럼 보이게 */
+#logoutBtn,
+#loginLink,
+#signupLink {
+    appearance: none;
+    border: 1px solid #e5e7eb;
+    background: #fff;
+    color: #111827;
+
+    border-radius: 12px;
+    padding: 9px 14px;
+    font-weight: 700;
+    cursor: pointer;
+
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+
+    transition: transform 0.08s ease, background 0.12s ease, border-color 0.12s ease;
+}
+
+#logoutBtn:active,
+#loginLink:active,
+#signupLink:active {
+    transform: translateY(1px);
+}
+
+#logoutBtn:hover,
+#loginLink:hover {
+    background: #f9fafb;
+    border-color: #d1d5db;
+}
+
+/* 회원가입만 포인트 컬러 */
+#signupLink {
+    background: #2563eb;
+    border-color: #2563eb;
+    color: #fff;
+}
+
+#signupLink:hover {
+    background: #1d4ed8;
+    border-color: #1d4ed8;
+}
+
+/* ✅ 기존 header.html에 있는 hr 스타일 예쁘게 */
+hr {
+    border: 0;
+    border-top: 1px solid #e5e7eb;
+    margin: 0;
+}
+
+/* =========================
+   Footer (기존 footer 태그 유지)
+========================= */
+.app-footer {
+    border-top: 1px solid #e5e7eb;
+    background: #ffffff;
+}
+
+.app-footer__inner {
+    width: min(980px, 92vw);
+    margin: 0 auto;
+    padding: 18px 0;
+    color: #6b7280;
+}
+
+
+/* footer.html에 클래스가 없을 수 있으니 footer 안 텍스트를 중앙 정렬 */
+.app-footer,
+.app-footer * {
+    color: #6b7280;
+}
+
+.app-footer {
+    padding: 18px 0;
+    text-align: center;
+    font-size: 13px;
+}
+
+/* =========================
+   Todo list (기존 구조 유지)
+========================= */
+.list_container {
+    margin: 24px auto 56px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+}
+
+.todo-item {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 18px;
+    padding: 18px;
+    box-shadow: 0 10px 30px rgba(17, 24, 39, 0.06);
+    transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+}
+
+.todo-item:hover {
+    transform: translateY(-1px);
+    border-color: #dbe3ff;
+    box-shadow: 0 14px 40px rgba(17, 24, 39, 0.08);
+}
+
+.todo-item img {
+    display: block;
+    max-width: 240px;
+    width: 100%;
+    border-radius: 16px;
+    margin-top: 10px;
+}
+
+/* pagination + create */
+.pagination {
+    width: min(980px, 92vw);
+    margin: 18px auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+}
+
+.pagination button {
+    border: 1px solid #e5e7eb;
+    background: #fff;
+    border-radius: 12px;
+    padding: 10px 14px;
+    cursor: pointer;
+}
+
+.pagination button:disabled {
+    opacity: .5;
+    cursor: not-allowed;
+}
+
+#pageInfo {
+    font-weight: 800;
+    color: #374151;
+    min-width: 80px;
+    text-align: center;
+}
+
+#createBtn {
+    width: min(930px, 92vw);
+    margin: 10px auto 0;
+    display: block;
+    padding: 14px 16px;
+    border-radius: 14px;
+    border: 0;
+    background: #2563eb;
+    color: #fff;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 10px 26px rgba(37, 99, 235, 0.22);
+}
+
+#createBtn:hover {
+    background: #1d4ed8;
+}
+
+/* 모바일 */
+@media (max-width:520px) {
+    .header h1 {
+        font-size: 18px;
+    }
+
+    .header {
+        padding: 12px 0;
+    }
+}

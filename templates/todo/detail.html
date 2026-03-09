@@ -2,7 +2,6 @@
 {% load static %}
 {% block content %}
 
-
 <!-- Todo 상세 정보를 보여주는 영역 -->
 <div class="todoDetail">
     <p><strong>이름:</strong> {{ todo.name }}</p>
@@ -10,7 +9,6 @@
     <p><strong>완료 여부:</strong> {{ todo.complete }}</p>
     <p><strong>작성일:</strong> {{ todo.created_at }}</p>
 
-    <!-- 이미지가 있을 때만 표시 -->
     {% if todo.image %}
     <p><strong>이미지:</strong></p>
     <img src="{{ todo.image.url }}" alt="todo image" style="max-width:300px; height:auto;">
@@ -26,59 +24,8 @@
     <button class="todoHome">홈으로</button>
 </div>
 
-<!-- Axios CDN -->
-<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-
-<script>
-    document.addEventListener("DOMContentLoaded", () => {
-        const todoId = "{{ todo.id }}";
-        const LOGIN_PAGE_URL = "/login/";
-        const LIST_PAGE_URL = "/todo/list/";
-
-        if (!window.api) {
-            console.error("window.api가 없습니다. base.html에서 static/js/api.js가 로드됐는지 확인하세요.");
-            alert("설정 오류: api.js가 로드되지 않았습니다.");
-            return;
-        }
-
-        const access = localStorage.getItem("access_token");
-        if (!access) {
-            window.location.href = LOGIN_PAGE_URL;
-            return;
-        }
-
-        function handleAuthError(err) {
-            const status = err.response?.status;
-            if (status === 401 || status === 403) {
-                alert("로그인이 필요합니다.");
-                localStorage.removeItem("access_token");
-                localStorage.removeItem("refresh_token");
-                window.location.href = LOGIN_PAGE_URL;
-            }
-            return Promise.reject(err);
-        }
-
-        document.querySelector(".todoUpdate").addEventListener("click", () => {
-            window.location.href = `/todo/update/${todoId}/`;
-        });
-
-        document.querySelector(".todoDelete").addEventListener("click", async () => {
-            const ok = confirm("정말 삭제하시겠습니까?");
-            if (!ok) return;
-            try {
-                await window.api.delete(`/todo/viewsets/view/${todoId}/`);
-                window.location.href = LIST_PAGE_URL;
-            } catch (err) {
-                handleAuthError(err).catch(() => { });
-                console.error("삭제 실패:", err.response?.data || err.message);
-                alert("삭제 중 오류가 발생했습니다.");
-            }
-        });
-
-        document.querySelector(".todoHome").addEventListener("click", () => {
-            window.location.href = LIST_PAGE_URL;
-        });
-    });
-</script>
+{# detail 페이지 전용 JS - todo.id를 JS로 넘겨주기 위해 data 속성 활용 #}
+<div id="todoMeta" data-todo-id="{{ todo.id }}" style="display:none;"></div>
+<script src="{% static 'js/todo_detail.js' %}"></script>
 
 {% endblock %}

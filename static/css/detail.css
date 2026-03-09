@@ -1,0 +1,125 @@
+/* =========================
+   Todo Detail Page
+   (detail.html: .todoDetail, .btnList)
+========================= */
+
+/* 상세 카드 */
+.todoDetail {
+    width: min(930px, 92vw);
+    margin: 24px auto 16px;
+
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 18px;
+    padding: 20px;
+
+    box-shadow: 0 10px 30px rgba(17, 24, 39, 0.06);
+}
+
+/* 라벨/내용 줄 */
+.todoDetail p {
+    margin: 10px 0;
+    line-height: 1.6;
+    color: #111827;
+}
+
+.todoDetail strong {
+    display: inline-block;
+    min-width: 84px;
+    color: #374151;
+}
+
+/* 이미지 */
+.todoDetail img {
+    display: block;
+    margin-top: 10px;
+    width: min(360px, 100%);
+    border-radius: 16px;
+    border: 1px solid #e5e7eb;
+}
+
+/* 버튼 영역 */
+.btnList {
+    width: min(930px, 92vw);
+    margin: 0 auto 56px;
+
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    align-items: center;
+
+    padding: 14px 0;
+}
+
+/* 버튼 공통 */
+.btnList button {
+    border: 1px solid #e5e7eb;
+    background: #ffffff;
+    color: #111827;
+
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-weight: 800;
+
+    cursor: pointer;
+    transition: transform 0.08s ease, background 0.12s ease, border-color 0.12s ease;
+}
+
+.btnList button:hover {
+    background: #f9fafb;
+    border-color: #d1d5db;
+}
+
+.btnList button:active {
+    transform: translateY(1px);
+}
+
+/* 버튼별 포인트 컬러 */
+.todoUpdate {
+    background: #2563eb !important;
+    border-color: #2563eb !important;
+    color: #ffffff !important;
+}
+
+.todoUpdate:hover {
+    background: #1d4ed8 !important;
+    border-color: #1d4ed8 !important;
+}
+
+.todoDelete {
+    background: #ef4444 !important;
+    border-color: #ef4444 !important;
+    color: #ffffff !important;
+}
+
+.todoDelete:hover {
+    background: #dc2626 !important;
+    border-color: #dc2626 !important;
+}
+
+.todoHome {
+    background: #111827 !important;
+    border-color: #111827 !important;
+    color: #ffffff !important;
+}
+
+.todoHome:hover {
+    background: #0b1220 !important;
+    border-color: #0b1220 !important;
+}
+
+/* 모바일 */
+@media (max-width: 520px) {
+    .btnList {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .btnList button {
+        width: 100%;
+    }
+
+    .todoDetail strong {
+        min-width: 70px;
+    }
+}

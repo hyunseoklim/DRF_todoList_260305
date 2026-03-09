@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     "todo",
     "rest_framework",
     "accounts",
+    "interaction",
 ]
 
 MIDDLEWARE = [

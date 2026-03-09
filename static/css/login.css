@@ -1,0 +1,103 @@
+/* =========================
+   Auth Page (login/signup)
+   - auth_base.html + .auth-card
+========================= */
+
+/* auth_base.html에서 body 배경이 다르면 안 바꿔도 됨 */
+body {
+    background: #f5f7fb;
+}
+
+/* 가운데 정렬 컨테이너가 없다면 auth_card 자체를 중앙으로 */
+.auth-card {
+    width: min(420px, 92vw);
+    margin: 64px auto 56px;
+
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 18px;
+    padding: 22px;
+
+    box-shadow: 0 14px 40px rgba(17, 24, 39, 0.08);
+}
+
+/* 제목 */
+.auth-card h2 {
+    margin: 0 0 14px;
+    font-size: 22px;
+    font-weight: 900;
+    letter-spacing: -0.2px;
+}
+
+/* 인풋 */
+.auth-card input {
+    width: 100%;
+    display: block;
+
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+
+    padding: 12px 12px;
+    margin-top: 10px;
+
+    font-size: 14px;
+    outline: none;
+    background: #fff;
+}
+
+.auth-card input:focus {
+    border-color: #93c5fd;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
+}
+
+/* 로그인 버튼 */
+.auth-card button {
+    width: 100%;
+    margin-top: 14px;
+
+    border: 0;
+    border-radius: 12px;
+    padding: 12px 14px;
+
+    background: #2563eb;
+    color: #fff;
+
+    font-weight: 900;
+    cursor: pointer;
+
+    box-shadow: 0 10px 26px rgba(37, 99, 235, 0.22);
+    transition: transform 0.08s ease, background 0.12s ease;
+}
+
+.auth-card button:hover {
+    background: #1d4ed8;
+}
+
+.auth-card button:active {
+    transform: translateY(1px);
+}
+
+/* 아래 문구 */
+.auth-card p {
+    margin: 14px 0 0;
+    color: #6b7280;
+    font-size: 14px;
+}
+
+/* 링크 */
+.auth-card a {
+    color: #2563eb;
+    font-weight: 800;
+    text-decoration: none;
+}
+
+.auth-card a:hover {
+    text-decoration: underline;
+}
+
+/* 모바일 */
+@media (max-width:520px) {
+    .auth-card {
+        margin-top: 36px;
+    }
+}
