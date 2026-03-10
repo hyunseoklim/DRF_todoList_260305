@@ -15,6 +15,50 @@ from rest_framework.pagination import PageNumberPagination
 # 기존 APIView 방식 대신 ViewSet을 사용하기 위해 TodoViewSet import
 # from .views.api_views import TodoViewSet
 
+from django.db.models import Q
+from ..pagination import TodoListPagination
+
+
+# Viewsets CRUD를 하나로 통일
+class TodoViewSet(viewsets.ModelViewSet):
+    serializer_class = TodoSerializer
+    permission_classes = [IsAuthenticated]  # 로그인한 사용자만 접근 가능
+    pagination_class = TodoListPagination  # 리스트 조회 시 페이지네이션 적용
+
+    # ======================================================
+    # 공개글 + 내 글 조회 로직
+    # ======================================================
+    def get_queryset(self):
+        user = self.request.user  # 현재 로그인한 사용자
+
+        return Todo.objects.filter(
+            # Q 객체를 사용하여 OR 조건을 생성
+            # ---------------------------------------------
+            # Q(is_public=True)
+            #   → 다른 사용자가 작성한 Todo라도
+            #     "공개글(is_public=True)"이면 조회 가능
+            #
+            # Q(user=user)
+            #   → 현재 로그인한 사용자가 작성한 Todo는
+            #     공개 여부와 상관없이 모두 조회 가능
+            #
+            # 즉,
+            # "공개글이거나 OR 내가 작성한 글" 을 조회
+            Q(is_public=True)
+            | Q(user=user)
+        ).order_by(
+            "-created_at"
+        )  # 최신 글이 먼저 보이도록 정렬
+
+    # ======================================================
+    # Todo 생성 시 작성자 자동 설정
+    # ======================================================
+    def perform_create(self, serializer):
+        # 프론트에서 user를 보내지 않아도
+        # 현재 로그인한 사용자를 작성자로 자동 저장
+        # 또한 기본적으로 글을 공개 상태(is_public=True)로 생성
+        serializer.save(user=self.request.user, is_public=True)
+
 
 class TodoListPagination(PageNumberPagination):
 
@@ -189,34 +233,3 @@ class TodoDeleteAPI(APIView):
 
         return Response(status=status.HTTP_204_NO_CONTENT)
         # 삭제 성공 시 응답 반환 (204 = 성공했지만 반환할 데이터 없음)
-
-
-# Todo CRUD를 하나의 클래스에서 처리하는 ViewSet
-class TodoViewSet(viewsets.ModelViewSet):
-
-    queryset = Todo.objects.all().order_by("-created_at")
-    # Todo 모델의 모든 데이터를 조회
-    # created_at 기준으로 최신 데이터가 먼저 나오도록 정렬
-
-    serializer_class = TodoSerializer
-    # Todo 데이터를 JSON으로 변환하거나
-    # JSON 데이터를 검증/저장할 때 사용할 Serializer 지정
-
-    # 로그인한 사용자만 API 접근 가능
-    permission_classes = [IsAuthenticated]
-
-    # 페이지네이션 설정 적용
-    pagination_class = TodoListPagination
-
-    # 조회할 queryset 설정
-    def get_queryset(self):
-
-        # 현재 로그인한 사용자(request.user)의 Todo만 조회
-        # 최신 Todo가 먼저 나오도록 created_at 기준 내림차순 정렬
-        return Todo.objects.filter(user=self.request.user).order_by("-created_at")
-
-    # Todo 생성 시 실행되는 메서드
-    def perform_create(self, serializer):
-
-        # Todo 생성할 때 현재 로그인한 사용자를 자동으로 user 필드에 저장
-        serializer.save(user=self.request.user)

@@ -25,7 +25,39 @@
         const signupLink = document.getElementById("signupLink");
 
         if (access) {
-            welcomeEl.textContent = "로그인됨";
+            try {
+
+                // 서버에 사용자 정보 요청
+                const res = await window.api.get("/me/");
+
+                // 응답 데이터에서 사용자 정보 추출
+                const user = res.data;
+
+                // 화면에 "username님 환영합니다" 메시지 표시
+                // 예: "hong님 환영합니다"
+                welcomeEl.textContent = `${user.username}님 환영합니다`;
+
+            } catch (err) {
+
+                // ======================================================
+                // 사용자 정보 조회 실패 처리
+                // ------------------------------------------------------
+                // 토큰이 만료되었거나 인증 오류가 발생했을 가능성
+                // ======================================================
+
+                // 콘솔에 오류 출력 (디버깅용)
+                console.error("유저 정보 불러오기 실패", err);
+
+                // 로컬스토리지에 저장된 토큰 제거
+                // → 인증 상태 초기화
+                localStorage.removeItem(ACCESS_KEY);
+                localStorage.removeItem(REFRESH_KEY);
+
+                // 로그인 페이지로 이동
+                window.location.href = "/login/";
+
+                return;
+            }
             welcomeEl.style.display = "inline-block";
             logoutBtn.style.display = "inline-block";
             loginLink.style.display = "none";

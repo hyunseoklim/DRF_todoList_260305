@@ -100,7 +100,7 @@ class TodoSerializer(ModelSerializer):
             "user",
             "username",
             # 공개 여부
-            # "is_public",
+            "is_public",
             # 좋아요 관련
             "like_count",
             "is_liked",

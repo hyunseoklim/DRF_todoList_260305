@@ -71,3 +71,6 @@ class CustomPageNumberPagination(PageNumberPagination):
                 ]
             )
         )
+
+
+TodoListPagination = CustomPageNumberPagination

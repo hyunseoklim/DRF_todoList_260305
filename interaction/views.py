@@ -146,6 +146,8 @@ class TodoCommentCreateAPIView(APIView):
 # =========================================================
 class TodoCommentListAPIView(APIView):
 
+    permission_classes = [IsAuthenticated]
+
     def get(self, request, todo_id):
 
         # Todo 객체 조회

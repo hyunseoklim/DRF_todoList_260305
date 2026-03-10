@@ -13,6 +13,8 @@ class Todo(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     image = models.ImageField(upload_to="todo_images/", blank=True, null=True)
 
+    is_public = models.BooleanField(default=True)
+
     # user 추가
     user = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="todos", null=True, blank=True
