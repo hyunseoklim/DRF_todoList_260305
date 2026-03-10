@@ -247,9 +247,3 @@ hr {
         padding: 12px 0;
     }
 }
-
-div.innerHTML=` <p><strong>작성자:</strong>$ {
-    todo.username ?? ""
-}
-
-</p>
