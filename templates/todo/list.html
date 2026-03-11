@@ -3,6 +3,13 @@
 {% block content %}
 
 <button id="movieReviewsBtn">🎬 영화 리뷰 & 감정분석</button>
+<button id="movieReviewsBtn">🎬 영화 리뷰 보기</button>
+
+<script>
+    document.getElementById("movieReviewsBtn").addEventListener("click", () => {
+        window.location.href = "/reviews/page/";
+    });
+</script>
 <div class="list_container"></div>
 
 <div class="pagination">

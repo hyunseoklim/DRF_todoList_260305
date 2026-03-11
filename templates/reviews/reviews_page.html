@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+
+<div class="reviews-wrap">
+    <!-- 왼쪽: 리뷰 목록 -->
+    <section class="card">
+        <div class="btn-row" style="justify-content:space-between;">
+            <h2 class="title">🎬 영화 리뷰</h2>
+            <button id="backToTodo">← Todo로</button>
+        </div>
+        <p class="muted">리뷰글을 선택하면 영화분석이 시작됩니다.</p>
+
+        <div id="reviewsList"></div>
+
+        <div class="pagination">
+            <button id="prevBtn">이전</button>
+            <span id="pageInfo" class="muted"></span>
+            <button id="nextBtn">다음</button>
+        </div>
+    </section>
+
+    <!-- 오른쪽: 분석 패널 -->
+    <section class="card">
+        <h2 class="title">🧠 감정 분석</h2>
+        <p class="muted">선택한 리뷰 또는 직접 입력한 텍스트를 분석합니다.</p>
+
+        <div class="hr"></div>
+
+        <div class="kv">
+            <div class="muted">글번호 <strong id="selectedId">없음</strong></div>
+            <div class="muted">제목 <strong id="selectedTitle">리뷰를 선택하세요</strong></div>
+        </div>
+
+        <div style="margin-top:10px;">
+            <textarea id="inputText" placeholder="여기에 텍스트를 붙여넣고 [텍스트 분석]을 눌러도 돼요."></textarea>
+        </div>
+
+        <div class="btn-row" style="margin-top:10px;">
+            <button id="analyzeSelected" class="primary" disabled>선택 리뷰 분석</button>
+            <button id="analyzeText">텍스트 분석</button>
+            <button id="clearBtn">초기화</button>
+        </div>
+
+        <div class="hr"></div>
+
+        <div id="resultArea" class="muted">결과가 여기에 표시됩니다.</div>
+    </section>
+</div>
+
+<!-- ✅ 외부 JS 파일 로드 -->
+<script src="{% static 'js/reviews/reviews_page.js' %}"></script>
+
+{% endblock %}
