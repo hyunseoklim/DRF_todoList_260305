@@ -11,6 +11,7 @@ urlpatterns = [
     path("", include("accounts.urls")),
     path("interaction/", include("interaction.urls")),
     path("api/reviews/", include("reviews.urls")),
+    path("reviews/", include("reviews.urls")),
 ]
 
 if settings.DEBUG:

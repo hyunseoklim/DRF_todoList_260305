@@ -24,6 +24,9 @@ from .services import predict_sentiment
 # 인증 없이 접근 가능하도록 하는 권한 클래스
 from rest_framework.permissions import AllowAny
 
+from celery.result import AsyncResult
+from .tasks import analyze_review_sentiment_by_id, analyze_sentiment_text
+
 
 # ============================================================
 # CollectedReview 데이터 조회용 API ViewSet
@@ -136,6 +139,61 @@ class CollectedReviewViewSet(viewsets.ReadOnlyModelViewSet):
 
         # 결과 반환
         return Response(pred, status=status.HTTP_200_OK)
+
+    # ---------------------------------------------------------
+    # ✅ (추가 1) DB 리뷰 비동기 분석 시작: job_id 즉시 반환
+    # POST /api/reviews/collected-reviews/{id}/sentiment-async/
+    # ---------------------------------------------------------
+    @action(detail=True, methods=["post"], url_path="sentiment-async")
+    def sentiment_async(self, request, pk=None):
+        review_id = int(pk)
+        task = analyze_review_sentiment_by_id.delay(review_id)
+
+        return Response(
+            {"task_id": task.id, "status": "queued"}, status=status.HTTP_202_ACCEPTED
+        )
+
+    # ---------------------------------------------------------
+    # ✅ (추가 2) 텍스트 비동기 분석 시작
+    # POST /api/reviews/collected-reviews/sentiment-async/
+    # body: {"text": "..."}
+    # ---------------------------------------------------------
+    @action(detail=False, methods=["post"], url_path="sentiment-async")
+    def sentiment_text_async(self, request):
+        serializer = SentimentTextSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        text = serializer.validated_data["text"]
+        task = analyze_sentiment_text.delay(text)
+
+        return Response(
+            {"task_id": task.id, "status": "queued"}, status=status.HTTP_202_ACCEPTED
+        )
+
+    # ---------------------------------------------------------
+    # ✅ (추가 3) 결과 조회
+    # GET /api/reviews/collected-reviews/sentiment-result/{task_id}/
+    # ---------------------------------------------------------
+    @action(
+        detail=False, methods=["get"], url_path=r"sentiment-result/(?P<task_id>[^/.]+)"
+    )
+    def sentiment_result(self, request, task_id=None):
+        res = AsyncResult(task_id)
+
+        payload = {"task_id": task_id, "state": res.state}
+
+        if res.state == "PENDING":
+            return Response(payload, status=status.HTTP_200_OK)
+
+        if res.state == "FAILURE":
+            payload["error"] = str(res.result)
+            return Response(payload, status=status.HTTP_200_OK)
+
+        if res.state == "SUCCESS":
+            payload["result"] = res.result
+            return Response(payload, status=status.HTTP_200_OK)
+
+        return Response(payload, status=status.HTTP_200_OK)
 
 
 # 독립적인 함수 생성

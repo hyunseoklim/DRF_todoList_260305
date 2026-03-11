@@ -58,6 +58,14 @@ document.addEventListener("DOMContentLoaded", () => {
     const $analyzeSelected = document.getElementById("analyzeSelected"); // 선택 리뷰 분석 버튼
     const $result = document.getElementById("resultArea");          // 감정 분석 결과 표시 영역
 
+    // ✅ 비동기 시작
+    const SENTIMENT_ASYNC_BY_ID = (id) => `/api/reviews/collected-reviews/${id}/sentiment-async/`;
+    const SENTIMENT_ASYNC_TEXT = `/api/reviews/collected-reviews/sentiment-async/`;
+
+    // ✅ 결과 조회
+    const SENTIMENT_RESULT = (taskId) =>
+        `/api/reviews/collected-reviews/sentiment-result/${taskId}/`;
+
     // ============================================================
     // 5) 결과 렌더링 함수
     // ============================================================
@@ -200,6 +208,25 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+    // ✅ task 완료까지 결과 조회(폴링)
+    async function pollResult(taskId, { intervalMs = 800, timeoutMs = 30000 } = {}) {
+        const start = Date.now();
+
+        while (true) {
+            const res = await window.api.get(SENTIMENT_RESULT(taskId));
+            const data = res.data;
+
+            if (data.state === "SUCCESS") return data.result;
+            if (data.state === "FAILURE") throw new Error(data.error || "Task failed");
+
+            if (Date.now() - start > timeoutMs) {
+                throw new Error("분석 시간이 오래 걸려 타임아웃되었습니다.");
+            }
+
+            await new Promise((r) => setTimeout(r, intervalMs));
+        }
+    }
+
     // ============================================================
     // 10) 페이지 이동 버튼 이벤트
     // ============================================================
@@ -216,21 +243,30 @@ document.addEventListener("DOMContentLoaded", () => {
     // ============================================================
     // 11) 선택 리뷰 감정 분석 버튼
     // ============================================================
+    // const res = await window.api.get(SENTIMENT_BY_ID(selected.id));
+    // renderResult(res.data);
+
     document.getElementById("analyzeSelected").onclick = async () => {
         if (!selected.id) return;
 
         try {
-            $result.textContent = "분석 중...";
+            $result.textContent = "분석 요청 중...";
 
-            // 선택한 리뷰 id로 감정분석 GET 호출
-            const res = await window.api.get(SENTIMENT_BY_ID(selected.id));
+            // ✅ 1) 비동기 작업 시작 (POST)
+            const startRes = await window.api.post(SENTIMENT_ASYNC_BY_ID(selected.id));
+            const taskId = startRes.data.task_id;
 
-            // 결과 렌더링
-            renderResult(res.data);
+            $result.textContent = `분석 중... (task_id=${taskId})`;
+
+            // ✅ 2) 결과 조회(폴링)
+            const finalResult = await pollResult(taskId);
+
+            // ✅ 3) 화면 표시
+            renderResult(finalResult);
 
         } catch (err) {
             console.error("선택 리뷰 분석 실패", err.response?.data || err.message);
-            alert("선택 리뷰 분석 실패");
+            alert(err.message || "선택 리뷰 분석 실패");
         }
     };
 
